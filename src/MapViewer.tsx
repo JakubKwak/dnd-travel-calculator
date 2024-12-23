@@ -1,6 +1,7 @@
 import React from "react";
 import { Component } from "react";
 import { withRouter } from "./App";
+import { drawLine, measurePath, distanceBetween } from "./PathDraw";
 
 class MapViewer extends Component<any, any> {
     divRef: React.RefObject<HTMLDivElement>;
@@ -17,7 +18,7 @@ class MapViewer extends Component<any, any> {
             circles: [],
             totalDistance: 0,
             isPlacingCircle: false,
-            distanceInput: "",
+            distanceInput: "100",
             point1: null,  // First point of the calibration line
             point2: null,  // Second point of the calibration line
             mapScale: 1, // User input for the known distance
@@ -30,9 +31,10 @@ class MapViewer extends Component<any, any> {
 
 
     componentDidMount() {
-        if (this.divRef.current !== null) {
-            this.divRef.current.addEventListener('wheel', this.handleWheel, { passive: false });
+        if (this.divRef.current === null) {
+            return console.error("Cannot mount Map Viewer component, references NULL")
         }
+        this.divRef.current.addEventListener('wheel', this.handleWheel, { passive: false });
         const { state } = this.props.location;
         if (!state || !state.imageUrl) {
             this.props.navigate('/');
@@ -71,8 +73,7 @@ class MapViewer extends Component<any, any> {
     };
 
     handleMouseUp = (e: React.MouseEvent) => {
-        if (e.button !== 1) return; // Middle click
-        this.setState({ isDragging: false });
+        if (e.button === 1) this.setState({ isDragging: false }); // Middle click
     };
 
     handleWheel = (e: { stopPropagation: () => void; deltaY: number; }) => {
@@ -87,25 +88,7 @@ class MapViewer extends Component<any, any> {
         if (e.target.tagName !== 'IMG') return
 
         this.placeCalibrationPoints(e.clientX, e.clientY)
-
-        if (!this.state.isPlacingCircle) return
-
-        const img = this.mapRef.current!;
-        const rect = img.getBoundingClientRect();
-
-        // Calculate click coordinates relative to the container
-        const x = (e.clientX - rect.left) / this.state.scale - 3;
-        const y = (e.clientY - rect.top) / this.state.scale - 3;
-
-        this.setState((prevState: { circles: any; }) => {
-            const newCircles = [...prevState.circles, { x, y }]; // Add new circle
-            this.drawLine(newCircles); // Draw line between new and previous circle
-            this.measurePath(newCircles);
-
-            return {
-                circles: newCircles,
-            };
-        });
+        this.placePathPoints(e.clientX, e.clientY)
     };
 
     togglePlaceCircle = () => {
@@ -113,84 +96,58 @@ class MapViewer extends Component<any, any> {
     };
 
     resetPath = () => {
-        this.setState({ circles: [], totalDistance: 0});
-        this.drawLine([])
+        const canvas = this.canvasRef.current!
+        this.setState({ circles: [], totalDistance: 0 });
+        drawLine([], canvas)
     };
 
-
-    drawLine = (circles: { y: any; x: any; }[]) => {
-        const canvas = this.canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-
-        // Clear the canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (circles.length < 2) return; // Only draw lines if there are at least two circles
-
-        // Set the line style
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-
-        // Begin drawing the path
-        ctx.beginPath();
-        const firstCircle = circles[0];
-        ctx.moveTo(firstCircle.x + 3, firstCircle.y + 3);
-
-        // Draw lines to each subsequent circle
-        circles.slice(1).forEach(circle => {
-            ctx.lineTo(circle.x + 3, circle.y + 3);
-        });
-        console.log(circles)
-
-        // Render the path
-        ctx.stroke();
-    };
-
-    measurePath = (circles: { y: any; x: any; }[]) => {
-        let totalDistance = 0
-        if (circles.length > 1) {
-            circles.slice(1).forEach((circle, index) => {
-                const previousCircle = circles[index]
-                const pixelDistance = Math.sqrt(
-                    Math.pow(circle.x - previousCircle.x, 2) + Math.pow(circle.y - previousCircle.y, 2)
-                );
-                totalDistance += pixelDistance
-                console.log('pixelDistance', pixelDistance)
-            });
-            totalDistance = totalDistance * this.state.mapScale
-            console.log('totalDistance', totalDistance, this.state.mapScale)
-
-        }
-        console.log(this.state)
-        this.setState({totalDistance: totalDistance})
+    resetCalibration = () => {
+        this.setState({
+            point1: null,
+            point2: null,
+            calibrationComplete: false
+        })
     }
 
-    handleCalibrationInput = () => {
+    calibrate = () => {
         const distance = parseFloat(this.state.distanceInput);
         if (!isNaN(distance) && this.state.point1 && this.state.point2) {
             const { point1, point2 } = this.state;
 
             // Calculate the distance between the two points in pixels
-            const pixelDistance = Math.sqrt(
-                Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
-            );
+            const pixelDistance = distanceBetween(point2.x, point2.y, point1.x, point1.y)
 
             // Calculate the scaling factor
-            const mapScale = distance / pixelDistance
+            const mapScale = distance / distanceBetween(point2.x, point2.y, point1.x, point1.y)
             console.log('mapscale', distance, pixelDistance, this.state.scale, mapScale)
             this.setState({ mapScale: mapScale, calibrationComplete: true });
         }
     };
 
-    // Handle mouse click for placing points on the map
-    placeCalibrationPoints = (x: number, y: number) => {
-        const { point1, point2 } = this.state;
+    placePathPoints = (x: number, y: number) => {
+        if (!this.state.isPlacingCircle) return
 
+        const img = this.mapRef.current!;
+        const rect = img.getBoundingClientRect();
+        const canvas = this.canvasRef.current!
+
+        // Calculate click coordinates relative to the container
+        x = (x - rect.left) / this.state.scale;
+        y = (y - rect.top) / this.state.scale;
+        this.setState((prevState: { circles: any; }) => {
+            const newCircles = [...prevState.circles, { x, y }];
+            // Draw the new path and recalculate the total distance
+            drawLine(newCircles, canvas);
+            const totalDistance = measurePath(newCircles) * this.state.mapScale
+            this.setState({ totalDistance: totalDistance })
+
+            return {
+                circles: newCircles,
+            };
+        });
+    }
+
+    placeCalibrationPoints = (x: number, y: number) => {
         const img = this.mapRef.current!;
         const rect = img.getBoundingClientRect();
 
@@ -198,11 +155,11 @@ class MapViewer extends Component<any, any> {
         x = (x - rect.left) / this.state.scale;
         y = (y - rect.top) / this.state.scale;
 
-        if (!point1) {
+        if (!this.state.point1) {
             this.setState({
                 point1: { x: x, y: y },
             });
-        } else if (!point2) {
+        } else if (!this.state.point2) {
             this.setState({
                 point2: { x: x, y: y },
             });
@@ -221,15 +178,13 @@ class MapViewer extends Component<any, any> {
             <div
                 ref={this.divRef}
                 style={{
-                    width: '100vw',
-                    height: '100vh',
-                    overflow: 'hidden',
                     cursor: isDragging
                         ? 'grabbing'
                         : isPlacingCircle
                             ? 'crosshair' // Custom cursor for circle placement
                             : 'auto',
                 }}
+                id='map'
                 onMouseDown={this.handleMouseDown}
                 onMouseMove={this.handleMouseMove}
                 onMouseUp={this.handleMouseUp}
@@ -237,45 +192,98 @@ class MapViewer extends Component<any, any> {
                 onWheel={this.handleWheel}
                 onClick={this.handleImageClick}
             >
-                <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1 }}>
+
+                {/* Top Left */}
+                <div className="fixed top-4 left-4 z-50 flex space-x-3">
                     <button
+                        className="bg-gray-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
                         onClick={() => this.props.navigate('/')}
-                        style={{
-                            padding: '8px 16px',
-                            backgroundColor: '#4a5568',
-                            color: 'white',
-                            borderRadius: '4px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            float: 'left'
-                        }}
                     >
                         Back
                     </button>
 
+                    {(point1 || point2) &&
+                        <button
+                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            onClick={() => this.resetCalibration()}
+                        >
+                            Reset Scale
+                        </button>
+                    }
+                </div>
+
+                {/* Top Banner */}
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50">
                     {!calibrationComplete && !(point1 && point2) &&
-                        <h3 style={{ float: 'left' }}>Click on two places on the map to set a scale.</h3>
+                        <h2 className="text-lg">Click on two places on the map to set the scale.</h2>
                     }
 
                     {point1 && point2 && !calibrationComplete && (
-                        <div
-                            style={{
-                                backgroundColor: 'white',
-                                padding: '2px',
-                                borderRadius: '2px',
-                            }}
-                        >
+                        <div className="flex items-center space-x-4">
+                            <h2 className="text-lg">Enter the distance of your selection (in miles):</h2>
                             <input
                                 type="number"
                                 value={distanceInput}
                                 onChange={(e) => this.setState({ distanceInput: e.target.value })}
-                                placeholder="Enter known distance in miles"
+                                className="border border-gray-300 rounded-lg px-3 py-2 w-40"
                             />
-                            <button onClick={this.handleCalibrationInput}>Calibrate</button>
+                            <button
+                                onClick={this.calibrate}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                            >
+                                Submit
+                            </button>
                         </div>
                     )}
                 </div>
 
+                {/* Bottom Left */}
+                <div className="fixed bottom-4 left-4 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50 text-xl">
+                    <p>Total Distance: {Math.round(totalDistance)} Miles</p>
+                    <p>Travel Time: {Math.round(totalDistance / 24 * 10) / 10} Days</p>
+                </div>
+
+                {/* Bottom Right */}
+                <div className="fixed bottom-4 right-4 z-50 flex space-x-3">
+
+                    {calibrationComplete &&
+                        <button
+                            className="bg-green-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            onClick={() => this.togglePlaceCircle()}
+                        >
+                            {isPlacingCircle ? 'Finish Drawing Path' : 'Begin Drawing Path'}
+                        </button>
+                    }
+                    {totalDistance > 0 &&
+                        <button
+                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            onClick={() => this.resetPath()}
+                        >
+                            Reset Path
+                        </button>
+                    }
+
+                    <button
+                        className="bg-gray-700 w-10 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                        onClick={() =>
+                            this.setState((prevState: any) => ({
+                                scale: Math.min(prevState.scale * 1.2, 5),
+                            }))
+                        }
+                    >
+                        +
+                    </button>
+                    <button
+                        className="bg-gray-700 w-10 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                        onClick={() =>
+                            this.setState((prevState: any) => ({
+                                scale: Math.max(prevState.scale * 0.8, 0.1),
+                            }))
+                        }
+                    >
+                        -
+                    </button>
+                </div>
 
                 <div
                     ref={this.mapRef}
@@ -283,6 +291,9 @@ class MapViewer extends Component<any, any> {
                         position: 'absolute',
                         transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                         transformOrigin: 'center',
+                    
+                        marginTop: '-25%', // Adjust by half the height of the image to ensure it's centered
+                        marginLeft: '-30%', // Adjust by half the width of the image to ensure it's centered
                     }}
                 >
                     {/* Image */}
@@ -291,41 +302,45 @@ class MapViewer extends Component<any, any> {
                         alt="Zoomable map"
                         style={{
                             display: 'block',
-                            maxWidth: '90vw',
-                            maxHeight: '90vh',
+                            maxWidth: '100vw',
+                            maxHeight: '100vh',
                             userSelect: 'none',
                         }}
                     />
                     {/* Calibration points: Show circles where the user clicked */}
-                    {point1 && (
+                    {point1 && !calibrationComplete && (
                         <div
                             style={{
                                 position: 'absolute',
-                                top: `${point1.y - 2}px`,
-                                left: `${point1.x - 2}px`,
-                                width: '4px',
-                                height: '4px',
-                                borderRadius: '50%',
-                                backgroundColor: 'yellow',
+                                top: `${point1.y - 2.5}px`,
+                                left: `${point1.x - 2.5}px`,
+                                width: 5,          
+                                height: 5,         
+                                borderRadius: '50%', 
+                                backgroundColor: 'yellow', 
+                                border: '1px solidrgb(139, 125, 0)', 
+                                opacity: '80%'
                             }}
                         />
                     )}
-                    {point2 && (
+                    {point2 && !calibrationComplete && (
                         <div
                             style={{
                                 position: 'absolute',
-                                top: `${point2.y - 2}px`,
-                                left: `${point2.x - 2}px`,
-                                width: '4px',
-                                height: '4px',
-                                borderRadius: '50%',
-                                backgroundColor: 'yellow',
+                                top: `${point2.y - 2.5}px`,
+                                left: `${point2.x - 2.5}px`,
+                                width: 5,          
+                                height: 5,         
+                                borderRadius: '50%', 
+                                backgroundColor: 'yellow', 
+                                border: '1px solidrgb(139, 125, 0)', 
+                                opacity: '80%'
                             }}
                         />
                     )}
 
                     {/* Show line between the two points for reference */}
-                    {point1 && point2 && (
+                    {point1 && point2 && !calibrationComplete && (
                         <svg
                             width="100%"
                             height="100%"
@@ -338,6 +353,7 @@ class MapViewer extends Component<any, any> {
                                 y2={point2.y}
                                 stroke="yellow"
                                 strokeWidth="1"
+                                strokeDasharray="2,2"  // Dotted line pattern: 2px dash, 2px gap
                             />
                         </svg>
                     )}
@@ -358,70 +374,18 @@ class MapViewer extends Component<any, any> {
                             key={index}
                             style={{
                                 position: 'absolute',
-                                top: circle.y,
-                                left: circle.x,
-                                width: 6,
-                                height: 6,
-                                borderRadius: '50%',
-                                backgroundColor: 'red',
+                                top: circle.y - 2.5,  // Center the circle by shifting half the width/height (3px)
+                                left: circle.x - 2.5, 
+                                width: 5,          
+                                height: 5,         
+                                borderRadius: '50%', 
+                                backgroundColor: 'red', 
+                                border: '1px solid #8b0000', 
                                 pointerEvents: 'none', // Ensure it doesn’t block clicks
+                                opacity: '80%'
                             }}
                         />
                     ))}
-                </div>
-
-
-                <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 1 }}>
-                    <div>
-                        <p>Total Disance: {Math.round(totalDistance)} Miles</p>
-                        <p>Travel Time: {Math.round(totalDistance / 24 * 10) / 10} Days</p>
-                    </div>
-
-                    {calibrationComplete &&
-                        <button onClick={() => this.togglePlaceCircle()}>{isPlacingCircle ? 'Finish Placing' : 'Place Circle'}</button>
-                    }
-                    {totalDistance > 0 &&
-                        <button onClick={() => this.resetPath()}>Reset Path</button>
-                    }
-
-
-                    {/* Zoom In Button*/}
-                    <button
-                        onClick={() =>
-                            this.setState((prevState: any) => ({
-                                scale: Math.min(prevState.scale * 1.2, 5),
-                            }))
-                        }
-                        style={{
-                            padding: '8px',
-                            marginRight: '8px',
-                            backgroundColor: '#4a5568',
-                            color: 'white',
-                            borderRadius: '4px',
-                            border: 'none',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        +
-                    </button>
-                    {/* Zoom Out Button*/}
-                    <button
-                        onClick={() =>
-                            this.setState((prevState: any) => ({
-                                scale: Math.max(prevState.scale * 0.8, 0.1),
-                            }))
-                        }
-                        style={{
-                            padding: '8px',
-                            backgroundColor: '#4a5568',
-                            color: 'white',
-                            borderRadius: '4px',
-                            border: 'none',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        -
-                    </button>
                 </div>
             </div>
         );

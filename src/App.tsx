@@ -60,12 +60,12 @@ function App() {
 
   return (
     <>
-      <h1>D&D Travel Calculator</h1>
+      <h1>D&D Travel Mapper</h1>
       <div className="card">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-3">
           <label
             htmlFor="imageInput"
-            className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 font-semibold"
           >
             Upload Image
           </label>
@@ -77,11 +77,10 @@ function App() {
             onChange={handleImageUpload}
           />
           {selectedImage && (
-            <div className="mt-4">
+            <div className="mt-4 bg-gray-700 bg-opacity-30 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50 max-w-72 max-h-100 flex flex-col gap-3">
               <img
                 src={selectedImage}
                 alt="Uploaded map"
-                style={{ maxWidth: '300px', height: 'auto' }}
               />
               <button
                 onClick={handleContinue}
