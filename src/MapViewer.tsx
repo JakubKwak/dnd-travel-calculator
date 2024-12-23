@@ -18,6 +18,7 @@ class MapViewer extends Component<any, any> {
             circles: [],
             totalDistance: 0,
             isPlacingCircle: false,
+            milesPerDay: 24,
             distanceInput: "100",
             point1: null,  // First point of the calibration line
             point2: null,  // Second point of the calibration line
@@ -167,7 +168,7 @@ class MapViewer extends Component<any, any> {
     };
 
     render() {
-        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isPlacingCircle, totalDistance } = this.state;
+        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isPlacingCircle, totalDistance, milesPerDay } = this.state;
         const imageUrl = this.props.location.state?.imageUrl;
 
         if (!imageUrl) {
@@ -239,8 +240,60 @@ class MapViewer extends Component<any, any> {
 
                 {/* Bottom Left */}
                 <div className="fixed bottom-4 left-4 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50 text-xl">
+                    <div className="flex flex-row mb-2 justify-between gap-3 items-center">
+                        <p className="text-gray-300">By Ship:</p>
+                        <button
+                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
+                            onClick={() => this.setState({ milesPerDay: 90 })}
+                        >
+                            Fast
+                        </button>
+                        <button
+                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
+                            onClick={() => this.setState({ milesPerDay: 60 })}
+                        >
+                            Normal
+                        </button>
+                        <button
+                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
+                            onClick={() => this.setState({ milesPerDay: 30 })}
+                        >
+                            Slow
+                        </button>
+                    </div>
+                    <div className="flex flex-row mb-2 justify-between gap-3 items-center">
+                        <p className="text-gray-300">On Foot:</p>
+                        <button
+                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
+                            onClick={() => this.setState({ milesPerDay: 30 })}
+                        >
+                            Fast
+                        </button>
+                        <button
+                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
+                            onClick={() => this.setState({ milesPerDay: 24 })}
+                        >
+                            Normal
+                        </button>
+                        <button
+                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
+                            onClick={() => this.setState({ milesPerDay: 18 })}
+                        >
+                            Slow
+                        </button>
+                    </div>
+                    <div className="flex flex-row gap-3 mb-8">
+                        <p>Miles Per Day:</p>
+                        <input
+                            type="number"
+                            value={milesPerDay}
+                            onChange={(e) => this.setState({ milesPerDay: e.target.value })}
+                            className="border border-gray-300 rounded-lg w-20 text-small pl-1"
+                        />
+                    </div>
+
                     <p>Total Distance: {Math.round(totalDistance)} Miles</p>
-                    <p>Travel Time: {Math.round(totalDistance / 24 * 10) / 10} Days</p>
+                    <p>Travel Time: {Math.round(totalDistance / milesPerDay * 10) / 10} Days</p>
                 </div>
 
                 {/* Bottom Right */}
@@ -291,7 +344,7 @@ class MapViewer extends Component<any, any> {
                         position: 'absolute',
                         transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                         transformOrigin: 'center',
-                    
+
                         marginTop: '-25%', // Adjust by half the height of the image to ensure it's centered
                         marginLeft: '-30%', // Adjust by half the width of the image to ensure it's centered
                     }}
@@ -314,11 +367,11 @@ class MapViewer extends Component<any, any> {
                                 position: 'absolute',
                                 top: `${point1.y - 2.5}px`,
                                 left: `${point1.x - 2.5}px`,
-                                width: 5,          
-                                height: 5,         
-                                borderRadius: '50%', 
-                                backgroundColor: 'yellow', 
-                                border: '1px solidrgb(139, 125, 0)', 
+                                width: 5,
+                                height: 5,
+                                borderRadius: '50%',
+                                backgroundColor: 'yellow',
+                                border: '1px solidrgb(139, 125, 0)',
                                 opacity: '80%'
                             }}
                         />
@@ -329,11 +382,11 @@ class MapViewer extends Component<any, any> {
                                 position: 'absolute',
                                 top: `${point2.y - 2.5}px`,
                                 left: `${point2.x - 2.5}px`,
-                                width: 5,          
-                                height: 5,         
-                                borderRadius: '50%', 
-                                backgroundColor: 'yellow', 
-                                border: '1px solidrgb(139, 125, 0)', 
+                                width: 5,
+                                height: 5,
+                                borderRadius: '50%',
+                                backgroundColor: 'yellow',
+                                border: '1px solidrgb(139, 125, 0)',
                                 opacity: '80%'
                             }}
                         />
@@ -375,12 +428,12 @@ class MapViewer extends Component<any, any> {
                             style={{
                                 position: 'absolute',
                                 top: circle.y - 2.5,  // Center the circle by shifting half the width/height (3px)
-                                left: circle.x - 2.5, 
-                                width: 5,          
-                                height: 5,         
-                                borderRadius: '50%', 
-                                backgroundColor: 'red', 
-                                border: '1px solid #8b0000', 
+                                left: circle.x - 2.5,
+                                width: 5,
+                                height: 5,
+                                borderRadius: '50%',
+                                backgroundColor: 'red',
+                                border: '1px solid #8b0000',
                                 pointerEvents: 'none', // Ensure it doesn’t block clicks
                                 opacity: '80%'
                             }}
