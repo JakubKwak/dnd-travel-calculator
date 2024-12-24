@@ -2,6 +2,7 @@ import React from "react";
 import { Component } from "react";
 import { withRouter } from "./App";
 import { drawLine, measurePath, distanceBetween } from "./PathDraw";
+import { getImageFromIndexedDB } from "./ImageStorage";
 
 class MapViewer extends Component<any, any> {
     divRef: React.RefObject<HTMLDivElement>;
@@ -15,9 +16,9 @@ class MapViewer extends Component<any, any> {
             position: { x: 0, y: 0 },
             isDragging: false,
             dragStart: { x: 0, y: 0 },
-            circles: [],
+            path: [],
             totalDistance: 0,
-            isPlacingCircle: false,
+            isDrawingPath: false,
             milesPerDay: 24,
             distanceInput: "100",
             point1: null,  // First point of the calibration line
@@ -36,15 +37,36 @@ class MapViewer extends Component<any, any> {
             return console.error("Cannot mount Map Viewer component, references NULL")
         }
         this.divRef.current.addEventListener('wheel', this.handleWheel, { passive: false });
+
         const { state } = this.props.location;
-        if (!state || !state.imageUrl) {
-            this.props.navigate('/');
+        if (!state) {
+            // Load state from localStorage when the component mounts
+            const savedState = localStorage.getItem('appState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState)
+                this.setState(parsedState, () => {
+                    // Fetch the image after restoring the state
+                    this.fetchImage();
+                    const canvas = this.canvasRef.current!
+                    drawLine(parsedState.path, canvas);
+                });
+            }
+        }
+    }
+
+    componentDidUpdate(_prevProps: any, prevState: Readonly<any>) {
+        // Save state to localStorage whenever it changes
+        if (prevState !== this.state) {
+            localStorage.setItem('appState', JSON.stringify(this.state));
         }
     }
 
     componentWillUnmount() {
         if (this.divRef.current !== null) {
             this.divRef.current.removeEventListener('wheel', this.handleWheel, {});
+        }
+        if (this.state.imageUrl) {
+            URL.revokeObjectURL(this.state.imageUrl);
         }
     }
 
@@ -92,14 +114,24 @@ class MapViewer extends Component<any, any> {
         this.placePathPoints(e.clientX, e.clientY)
     };
 
-    togglePlaceCircle = () => {
-        this.setState({ isPlacingCircle: !this.state.isPlacingCircle });
+    toggleDrawingPath = () => {
+        this.setState({ isDrawingPath: !this.state.isDrawingPath });
+        // Re-draw the line. Temporary fix for path not being there when refreshing page for some reason
+        const canvas = this.canvasRef.current!
+        drawLine(this.state.path, canvas);
     };
 
     resetPath = () => {
         const canvas = this.canvasRef.current!
-        this.setState({ circles: [], totalDistance: 0 });
+        this.setState({ path: [], totalDistance: 0 });
         drawLine([], canvas)
+    };
+
+    undoPath = () => {
+        const canvas = this.canvasRef.current!
+        const newPath = this.state.path.slice(0, -1)
+        this.setState({ path: newPath, totalDistance: measurePath(newPath) });
+        drawLine(newPath, canvas)
     };
 
     resetCalibration = () => {
@@ -125,8 +157,20 @@ class MapViewer extends Component<any, any> {
         }
     };
 
+    fetchImage = async () => {
+        try {
+            const file = await getImageFromIndexedDB();
+            if (file) {
+                const objectUrl = URL.createObjectURL(file);
+                this.setState({ imageUrl: objectUrl });
+            }
+        } catch (error) {
+            console.error('Error fetching image from IndexedDB:', error);
+        }
+    };
+
     placePathPoints = (x: number, y: number) => {
-        if (!this.state.isPlacingCircle) return
+        if (!this.state.isDrawingPath) return
 
         const img = this.mapRef.current!;
         const rect = img.getBoundingClientRect();
@@ -135,15 +179,15 @@ class MapViewer extends Component<any, any> {
         // Calculate click coordinates relative to the container
         x = (x - rect.left) / this.state.scale;
         y = (y - rect.top) / this.state.scale;
-        this.setState((prevState: { circles: any; }) => {
-            const newCircles = [...prevState.circles, { x, y }];
+        this.setState((prevState: { path: any; }) => {
+            const newPath = [...prevState.path, { x, y }];
             // Draw the new path and recalculate the total distance
-            drawLine(newCircles, canvas);
-            const totalDistance = measurePath(newCircles) * this.state.mapScale
+            drawLine(newPath, canvas);
+            const totalDistance = measurePath(newPath) * this.state.mapScale
             this.setState({ totalDistance: totalDistance })
 
             return {
-                circles: newCircles,
+                path: newPath,
             };
         });
     }
@@ -168,12 +212,7 @@ class MapViewer extends Component<any, any> {
     };
 
     render() {
-        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isPlacingCircle, totalDistance, milesPerDay } = this.state;
-        const imageUrl = this.props.location.state?.imageUrl;
-
-        if (!imageUrl) {
-            return <div>No image found. Please upload an image first.</div>;
-        }
+        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isDrawingPath, totalDistance, milesPerDay, imageUrl } = this.state;
 
         return (
             <div
@@ -181,7 +220,7 @@ class MapViewer extends Component<any, any> {
                 style={{
                     cursor: isDragging
                         ? 'grabbing'
-                        : isPlacingCircle
+                        : isDrawingPath
                             ? 'crosshair' // Custom cursor for circle placement
                             : 'auto',
                 }}
@@ -236,6 +275,9 @@ class MapViewer extends Component<any, any> {
                             </button>
                         </div>
                     )}
+                    {calibrationComplete &&
+                        <h2 className="text-lg">Draw a path on the map to calcualte the distance and travel time.</h2>
+                    }
                 </div>
 
                 {/* Bottom Left */}
@@ -302,17 +344,25 @@ class MapViewer extends Component<any, any> {
                     {calibrationComplete &&
                         <button
                             className="bg-green-700 text-white font-medium px-3 py-2 rounded hover:bg-green-600"
-                            onClick={() => this.togglePlaceCircle()}
+                            onClick={() => this.toggleDrawingPath()}
                         >
-                            {isPlacingCircle ? 'Finish Drawing Path' : 'Begin Drawing Path'}
+                            {isDrawingPath ? 'Finish Drawing Path' : 'Begin Drawing Path'}
                         </button>
                     }
-                    {totalDistance > 0 &&
+                    {this.state.path.length > 0 &&
                         <button
                             className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-red-600"
                             onClick={() => this.resetPath()}
                         >
                             Reset Path
+                        </button>
+                    }
+                    {this.state.path.length > 0 &&
+                        <button
+                            className="bg-gray-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            onClick={() => this.undoPath()}
+                        >
+                            Undo
                         </button>
                     }
 
@@ -421,14 +471,14 @@ class MapViewer extends Component<any, any> {
                             pointerEvents: 'none', // Don't block interactions with the image or circles
                         }}
                     />
-                    {/* Circles */}
-                    {this.state.circles.map((circle: { y: any; x: any; }, index: React.Key | null | undefined) => (
+                    {/* Path */}
+                    {this.state.path.map((point: { y: any; x: any; }, index: React.Key | null | undefined) => (
                         <div
                             key={index}
                             style={{
                                 position: 'absolute',
-                                top: circle.y - 2.5,  // Center the circle by shifting half the width/height (3px)
-                                left: circle.x - 2.5,
+                                top: point.y - 2.5,  // Center the circle by shifting half the width/height (3px)
+                                left: point.x - 2.5,
                                 width: 5,
                                 height: 5,
                                 borderRadius: '50%',

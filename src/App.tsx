@@ -2,27 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { ImageViewerWithRouter } from './MapViewer';
-import { openDB } from 'idb';
+import { getImageFromIndexedDB, saveImageToIndexedDB } from './ImageStorage';
 
-async function openImageDB() {
-  return openDB('ImageDB', 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains('images')) {
-        db.createObjectStore('images'); // Ensure 'images' store exists
-      }
-    },
-  });
-}
-
-async function saveImageToIndexedDB(file: File) {
-  const db = await openImageDB();
-  await db.put('images', file, 'uploadedImage');
-}
-
-async function getImageFromIndexedDB() {
-  const db = await openImageDB();
-  return await db.get('images', 'uploadedImage');
-}
 
 function App() {
   const [existing, setExisting] = useState(false);
@@ -54,7 +35,7 @@ function App() {
 
   const handleContinue = () => {
     if (selectedImage) {
-      navigate('/viewer', { state: { imageUrl: selectedImage } });
+      navigate('/viewer');
     }
   };
 

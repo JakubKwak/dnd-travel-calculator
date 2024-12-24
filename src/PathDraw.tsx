@@ -1,5 +1,5 @@
 // Draw a line between all points
-export const drawLine = (circles: { y: any; x: any; }[], canvas: HTMLCanvasElement) => {
+export const drawLine = (path: { y: any; x: any; }[], canvas: HTMLCanvasElement) => {
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     const dpr = 4;
@@ -12,7 +12,7 @@ export const drawLine = (circles: { y: any; x: any; }[], canvas: HTMLCanvasEleme
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.scale(dpr, dpr)
 
-    if (circles.length < 2) return; // Only draw lines if there are at least two circles
+    if (path.length < 2) return; // Only draw lines if there are at least two points
 
     // Set the line style
     ctx.strokeStyle = 'red';
@@ -21,12 +21,12 @@ export const drawLine = (circles: { y: any; x: any; }[], canvas: HTMLCanvasEleme
 
     // Begin drawing the path
     ctx.beginPath();
-    const firstCircle = circles[0];
-    ctx.moveTo(firstCircle.x, firstCircle.y);
+    const firstPoint = path[0];
+    ctx.moveTo(firstPoint.x, firstPoint.y);
 
-    // Draw lines to each subsequent circle
-    circles.slice(1).forEach(circle => {
-        ctx.lineTo(circle.x, circle.y);
+    // Draw lines to each subsequent point
+    path.slice(1).forEach(point => {
+        ctx.lineTo(point.x, point.y);
     });
 
     // Render the path
@@ -34,12 +34,12 @@ export const drawLine = (circles: { y: any; x: any; }[], canvas: HTMLCanvasEleme
 };
 
 // Measure the distance between all points in a path
-export const measurePath = (circles: { y: any; x: any; }[]): number => {
+export const measurePath = (path: { y: any; x: any; }[]): number => {
     let totalDistance = 0
-    if (circles.length > 1) {
-        circles.slice(1).forEach((circle, index) => {
-            const previousCircle = circles[index]
-            totalDistance += distanceBetween(circle.x, circle.y, previousCircle.x, previousCircle.y)
+    if (path.length > 1) {
+        path.slice(1).forEach((point, index) => {
+            const previousPoint = path[index]
+            totalDistance += distanceBetween(point.x, point.y, previousPoint.x, previousPoint.y)
         });
     }
 
