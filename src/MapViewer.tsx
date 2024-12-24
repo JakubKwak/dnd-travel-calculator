@@ -139,7 +139,8 @@ class MapViewer extends Component<any, any> {
         this.setState({
             point1: null,
             point2: null,
-            calibrationComplete: false
+            calibrationComplete: false,
+            isDrawingPath: false,
         })
     }
 
