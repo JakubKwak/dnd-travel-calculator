@@ -205,7 +205,7 @@ class MapViewer extends Component<any, any> {
 
                     {(point1 || point2) &&
                         <button
-                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-red-600"
                             onClick={() => this.resetCalibration()}
                         >
                             Reset Scale
@@ -301,7 +301,7 @@ class MapViewer extends Component<any, any> {
 
                     {calibrationComplete &&
                         <button
-                            className="bg-green-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            className="bg-green-700 text-white font-medium px-3 py-2 rounded hover:bg-green-600"
                             onClick={() => this.togglePlaceCircle()}
                         >
                             {isPlacingCircle ? 'Finish Drawing Path' : 'Begin Drawing Path'}
@@ -309,7 +309,7 @@ class MapViewer extends Component<any, any> {
                     }
                     {totalDistance > 0 &&
                         <button
-                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-red-600"
                             onClick={() => this.resetPath()}
                         >
                             Reset Path
