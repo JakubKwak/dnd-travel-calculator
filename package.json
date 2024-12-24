@@ -27,6 +27,6 @@
     "vite": "^6.0.3"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.20"
   }
 }
