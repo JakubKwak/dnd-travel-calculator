@@ -107,8 +107,9 @@ class MapViewer extends Component<any, any> {
         }));
     };
 
-    handleImageClick = (e: { target: { tagName: string; }; clientX: number; clientY: number; }) => {
-        if (e.target.tagName !== 'IMG') return
+    handleImageClick = (e: React.MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'IMG') return
 
         this.placeCalibrationPoints(e.clientX, e.clientY)
         this.placePathPoints(e.clientX, e.clientY)
