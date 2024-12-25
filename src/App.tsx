@@ -6,7 +6,6 @@ import { getImageFromIndexedDB, saveImageToIndexedDB } from './ImageStorage';
 
 
 function App() {
-  const [existing, setExisting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -35,6 +34,7 @@ function App() {
 
   const handleContinue = () => {
     if (selectedImage) {
+      localStorage.clear(); // Clear the previous state
       navigate('/viewer');
     }
   };
@@ -72,10 +72,10 @@ function App() {
             </div>
           )}
           <button
-            onClick={() => setExisting(true)}
+            onClick={() => navigate('/viewer')}
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
           >
-            Use Existing Config: {existing.toString()}
+            Load Previous State
           </button>
         </div>
       </div>

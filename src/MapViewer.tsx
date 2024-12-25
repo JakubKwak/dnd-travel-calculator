@@ -25,6 +25,8 @@ class MapViewer extends Component<any, any> {
             point2: null,  // Second point of the calibration line
             mapScale: 1, // User input for the known distance
             calibrationComplete: false, // Flag to check if calibration is done
+            width: 0,
+            height: 0,
         };
         this.divRef = React.createRef();
         this.mapRef = React.createRef();
@@ -41,15 +43,22 @@ class MapViewer extends Component<any, any> {
         const { state } = this.props.location;
         if (!state) {
             // Load state from localStorage when the component mounts
-            const savedState = localStorage.getItem('appState');
-            if (savedState) {
-                const parsedState = JSON.parse(savedState)
+            let newState = localStorage.getItem('appState');
+            if (newState) {
+                const parsedState = JSON.parse(newState)
+                parsedState.imageUrl = null;
                 this.setState(parsedState, () => {
                     // Fetch the image after restoring the state
                     this.fetchImage();
                     const canvas = this.canvasRef.current!
                     drawLine(parsedState.path, canvas);
                 });
+            } else {
+                // Fetch new image from IDB
+                this.fetchImage();
+                // Set an initial width to avoid scaling issues when window is resized
+                this.setState({ width: window.innerWidth })
+                this.setState({ height: window.innerHeight })
             }
         }
     }
@@ -64,9 +73,6 @@ class MapViewer extends Component<any, any> {
     componentWillUnmount() {
         if (this.divRef.current !== null) {
             this.divRef.current.removeEventListener('wheel', this.handleWheel, {});
-        }
-        if (this.state.imageUrl) {
-            URL.revokeObjectURL(this.state.imageUrl);
         }
     }
 
@@ -214,7 +220,7 @@ class MapViewer extends Component<any, any> {
     };
 
     render() {
-        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isDrawingPath, totalDistance, milesPerDay, imageUrl } = this.state;
+        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isDrawingPath, totalDistance, milesPerDay, imageUrl, width, height } = this.state;
 
         return (
             <div
@@ -225,6 +231,9 @@ class MapViewer extends Component<any, any> {
                         : isDrawingPath
                             ? 'crosshair' // Custom cursor for circle placement
                             : 'auto',
+                    width: `${width}px`,
+                    height: `${height}px`,
+                    overflow: 'hidden',
                 }}
                 id='map'
                 onMouseDown={this.handleMouseDown}
@@ -396,6 +405,8 @@ class MapViewer extends Component<any, any> {
                         position: 'absolute',
                         transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
                         transformOrigin: 'center',
+                        width: `${width}px`,
+                        height: `${height}px`,
 
                         marginTop: '-25%', // Adjust by half the height of the image to ensure it's centered
                         marginLeft: '-30%', // Adjust by half the width of the image to ensure it's centered
@@ -407,8 +418,8 @@ class MapViewer extends Component<any, any> {
                         alt="Zoomable map"
                         style={{
                             display: 'block',
-                            maxWidth: '100vw',
-                            maxHeight: '100vh',
+                            maxWidth: `${width}px`,
+                            maxHeight: `${height}px`,
                             userSelect: 'none',
                         }}
                     />
