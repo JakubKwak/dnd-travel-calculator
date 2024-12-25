@@ -102,7 +102,7 @@ class MapViewer extends Component<any, any> {
         }
     };
 
-    handleMouseUp = (e: React.MouseEvent) => {
+    handleMouseUp = () => {
         this.setState({ isDragging: false })
     };
 
