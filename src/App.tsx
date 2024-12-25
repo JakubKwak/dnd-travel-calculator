@@ -6,15 +6,15 @@ import { getImageFromIndexedDB, saveImageToIndexedDB } from './ImageStorage';
 
 
 function App() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [stateExists, setStateExists] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Handle file selection
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedImage(URL.createObjectURL(file)); // Preview the image
-      await saveImageToIndexedDB(file); // Save to IndexedDB
+      setSelectedImage(file); // Preview the image
     }
   };
 
@@ -23,32 +23,37 @@ function App() {
       try {
         const file = await getImageFromIndexedDB();
         if (file) {
-          setSelectedImage(URL.createObjectURL(file));
+          setSelectedImage(file);
         }
       } catch (error) {
         console.error('Error fetching image from IndexedDB:', error);
       }
     };
     fetchImage();
+    const savedState = localStorage.getItem('appState');
+    if (savedState) {
+      setStateExists(true);
+    }
   }, []);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedImage) {
       localStorage.clear(); // Clear the previous state
+      await saveImageToIndexedDB(selectedImage); // Save to IndexedDB
       navigate('/viewer');
     }
   };
 
   return (
     <>
-      <h1>D&D Travel Mapper</h1>
+      <h1>D&D Travel Calculator</h1>
       <div className="card">
         <div className="flex flex-col items-center gap-3">
           <label
             htmlFor="imageInput"
             className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 font-semibold"
           >
-            Upload Image
+            Upload New Map Image
           </label>
           <input
             type="file"
@@ -60,23 +65,25 @@ function App() {
           {selectedImage && (
             <div className="mt-4 bg-gray-700 bg-opacity-30 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50 max-w-72 max-h-100 flex flex-col gap-3">
               <img
-                src={selectedImage}
+                src={URL.createObjectURL(selectedImage)}
                 alt="Uploaded map"
               />
               <button
                 onClick={handleContinue}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               >
-                Continue
+                Continue With Map
               </button>
             </div>
           )}
-          <button
-            onClick={() => navigate('/viewer')}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Load Previous State
-          </button>
+          {stateExists &&
+            <button
+              onClick={() => navigate('/viewer')}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Load Previous State
+            </button>
+          }
         </div>
       </div>
     </>

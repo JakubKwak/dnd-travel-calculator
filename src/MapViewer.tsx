@@ -43,9 +43,9 @@ class MapViewer extends Component<any, any> {
         const { state } = this.props.location;
         if (!state) {
             // Load state from localStorage when the component mounts
-            let newState = localStorage.getItem('appState');
-            if (newState) {
-                const parsedState = JSON.parse(newState)
+            const savedState = localStorage.getItem('appState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState)
                 parsedState.imageUrl = null;
                 this.setState(parsedState, () => {
                     // Fetch the image after restoring the state
@@ -77,16 +77,17 @@ class MapViewer extends Component<any, any> {
     }
 
     handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button !== 1) return; // Middle click
-
-        e.preventDefault()
-        this.setState({
-            isDragging: true,
-            dragStart: {
-                x: e.clientX - this.state.position.x,
-                y: e.clientY - this.state.position.y,
-            },
-        });
+        // Middle click or CTRL + Left Click
+        if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+            e.preventDefault()
+            this.setState({
+                isDragging: true,
+                dragStart: {
+                    x: e.clientX - this.state.position.x,
+                    y: e.clientY - this.state.position.y,
+                },
+            });
+        }
     };
 
     handleMouseMove = (e: React.MouseEvent) => {
@@ -102,7 +103,7 @@ class MapViewer extends Component<any, any> {
     };
 
     handleMouseUp = (e: React.MouseEvent) => {
-        if (e.button === 1) this.setState({ isDragging: false }); // Middle click
+        this.setState({ isDragging: false })
     };
 
     handleWheel = (e: { stopPropagation: () => void; deltaY: number; }) => {
@@ -115,7 +116,7 @@ class MapViewer extends Component<any, any> {
 
     handleImageClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (target.tagName !== 'IMG') return
+        if (target.tagName !== 'IMG' || e.ctrlKey) return
 
         this.placeCalibrationPoints(e.clientX, e.clientY)
         this.placePathPoints(e.clientX, e.clientY)
@@ -137,7 +138,7 @@ class MapViewer extends Component<any, any> {
     undoPath = () => {
         const canvas = this.canvasRef.current!
         const newPath = this.state.path.slice(0, -1)
-        this.setState({ path: newPath, totalDistance: measurePath(newPath) * this.state.mapScale});
+        this.setState({ path: newPath, totalDistance: measurePath(newPath) * this.state.mapScale });
         drawLine(newPath, canvas)
     };
 
@@ -424,38 +425,6 @@ class MapViewer extends Component<any, any> {
                         }}
                     />
                     {/* Calibration points: Show circles where the user clicked */}
-                    {point1 && !calibrationComplete && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: `${point1.y - 2.5}px`,
-                                left: `${point1.x - 2.5}px`,
-                                width: 5,
-                                height: 5,
-                                borderRadius: '50%',
-                                backgroundColor: 'yellow',
-                                border: '1px solidrgb(139, 125, 0)',
-                                opacity: '80%'
-                            }}
-                        />
-                    )}
-                    {point2 && !calibrationComplete && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: `${point2.y - 2.5}px`,
-                                left: `${point2.x - 2.5}px`,
-                                width: 5,
-                                height: 5,
-                                borderRadius: '50%',
-                                backgroundColor: 'yellow',
-                                border: '1px solidrgb(139, 125, 0)',
-                                opacity: '80%'
-                            }}
-                        />
-                    )}
-
-                    {/* Show line between the two points for reference */}
                     {point1 && point2 && !calibrationComplete && (
                         <svg
                             width="100%"
@@ -467,11 +436,41 @@ class MapViewer extends Component<any, any> {
                                 y1={point1.y}
                                 x2={point2.x}
                                 y2={point2.y}
-                                stroke="yellow"
+                                stroke="blue"
                                 strokeWidth="1"
                                 strokeDasharray="2,2"  // Dotted line pattern: 2px dash, 2px gap
                             />
                         </svg>
+                    )}
+                    {point1 && !calibrationComplete && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: point1.y - 2.5,
+                                left: point1.x - 2.5,
+                                width: 5,
+                                height: 5,
+                                borderRadius: '50%',
+                                backgroundColor: 'blue',
+                                border: '1px solid #0f0063',
+                                opacity: '80%'
+                            }}
+                        />
+                    )}
+                    {point2 && !calibrationComplete && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: point2.y - 2.5,
+                                left: point2.x - 2.5,
+                                width: 5,
+                                height: 5,
+                                borderRadius: '50%',
+                                backgroundColor: 'blue',
+                                border: '1px solid #0f0063',
+                                opacity: '80%'
+                            }}
+                        />
                     )}
 
                     {/* Canvas for drawing lines */}
