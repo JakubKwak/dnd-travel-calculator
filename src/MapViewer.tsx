@@ -264,6 +264,18 @@ class MapViewer extends Component<any, any> {
                     }
                 </div>
 
+
+                {/* Top Right */}
+                <div className="fixed top-4 right-4 z-50 flex space-x-3">
+                    <div className="bg-gray-500 w-10 text-white font-medium px-3 py-2 rounded hover:bg-gray-300 cursor-pointer group">
+                        ?
+                        <div className="absolute overflow-hidden top-10 right-0 w-0 h-0 p-0 opacity-0 group-hover:w-80 group-hover:h-40 group-hover:p-4 group-hover:opacity-100 transition-all duration-300 bg-white border rounded-lg shadow-lg">
+                            <p className="text-gray-700 text-lg mb-4">To Zoom: Use Scroll Wheel or the + - buttons in the bottom right.</p>
+                            <p className="text-gray-700 text-lg">To Pan: Hold Middle Click or CTRL + Left Click and drag.</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Top Banner */}
                 <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50">
                     {!calibrationComplete && !(point1 && point2) &&
@@ -408,9 +420,6 @@ class MapViewer extends Component<any, any> {
                         transformOrigin: 'center',
                         width: `${width}px`,
                         height: `${height}px`,
-
-                        marginTop: '-25%', // Adjust by half the height of the image to ensure it's centered
-                        marginLeft: '-30%', // Adjust by half the width of the image to ensure it's centered
                     }}
                 >
                     {/* Image */}

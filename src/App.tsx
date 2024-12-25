@@ -36,7 +36,7 @@ function App() {
     }
   }, []);
 
-  const handleContinue = async () => {
+  const handleSubmit = async () => {
     if (selectedImage) {
       localStorage.clear(); // Clear the previous state
       await saveImageToIndexedDB(selectedImage); // Save to IndexedDB
@@ -69,10 +69,10 @@ function App() {
                 alt="Uploaded map"
               />
               <button
-                onClick={handleContinue}
+                onClick={handleSubmit}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               >
-                Continue With Map
+                Create Map From Image
               </button>
             </div>
           )}
@@ -81,8 +81,11 @@ function App() {
               onClick={() => navigate('/viewer')}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
-              Load Previous State
+              Continue Previous Map
             </button>
+          }
+          {window.innerWidth <= 768 && 
+            <p>Warning: TouchScreen devices not supported.</p>
           }
         </div>
       </div>
