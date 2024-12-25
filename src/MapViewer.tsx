@@ -137,7 +137,7 @@ class MapViewer extends Component<any, any> {
     undoPath = () => {
         const canvas = this.canvasRef.current!
         const newPath = this.state.path.slice(0, -1)
-        this.setState({ path: newPath, totalDistance: measurePath(newPath) });
+        this.setState({ path: newPath, totalDistance: measurePath(newPath) * this.state.mapScale});
         drawLine(newPath, canvas)
     };
 
