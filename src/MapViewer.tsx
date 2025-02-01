@@ -21,8 +21,8 @@ class MapViewer extends Component<any, any> {
             isDrawingPath: false,
             milesPerDay: 24,
             distanceInput: "100",
-            point1: null,  // First point of the calibration line
-            point2: null,  // Second point of the calibration line
+            calibrationPoint1: null,  // First point of the calibration line
+            calibrationPoint2: null,  // Second point of the calibration line
             mapScale: 1, // User input for the known distance
             calibrationComplete: false, // Flag to check if calibration is done
             width: 0,
@@ -40,27 +40,24 @@ class MapViewer extends Component<any, any> {
         }
         this.divRef.current.addEventListener('wheel', this.handleWheel, { passive: false });
 
-        const { state } = this.props.location;
-        if (!state) {
-            // Load state from localStorage when the component mounts
-            const savedState = localStorage.getItem('appState');
-            if (savedState) {
-                const parsedState = JSON.parse(savedState)
-                parsedState.imageUrl = null;
-                this.setState(parsedState, () => {
-                    // Fetch the image after restoring the state
-                    this.fetchImage();
-                    const canvas = this.canvasRef.current!
-                    drawLine(parsedState.path, canvas);
-                });
-            } else {
-                // Fetch new image from IDB
+    
+        // Load state from localStorage when the component mounts
+        const savedState = localStorage.getItem('appState');
+        if (savedState) {
+            const parsedState = JSON.parse(savedState)
+            parsedState.imageUrl = null;
+            this.setState(parsedState, () => {
                 this.fetchImage();
-                // Set an initial width to avoid scaling issues when window is resized
-                this.setState({ width: window.innerWidth })
-                this.setState({ height: window.innerHeight })
-            }
+                const canvas = this.canvasRef.current!
+                drawLine(parsedState.path, canvas);
+            });
+            return
         }
+        this.fetchImage();
+        // Set an initial width to avoid scaling issues when window is resized
+        this.setState({ width: window.innerWidth })
+        this.setState({ height: window.innerHeight })
+
     }
 
     componentDidUpdate(_prevProps: any, prevState: Readonly<any>) {
@@ -124,9 +121,6 @@ class MapViewer extends Component<any, any> {
 
     toggleDrawingPath = () => {
         this.setState({ isDrawingPath: !this.state.isDrawingPath });
-        // Re-draw the line. Temporary fix for path not being there when refreshing page for some reason
-        const canvas = this.canvasRef.current!
-        drawLine(this.state.path, canvas);
     };
 
     resetPath = () => {
@@ -144,8 +138,8 @@ class MapViewer extends Component<any, any> {
 
     resetCalibration = () => {
         this.setState({
-            point1: null,
-            point2: null,
+            calibrationPoint1: null,
+            calibrationPoint2: null,
             calibrationComplete: false,
             isDrawingPath: false,
         })
@@ -153,15 +147,11 @@ class MapViewer extends Component<any, any> {
 
     calibrate = () => {
         const distance = parseFloat(this.state.distanceInput);
-        if (!isNaN(distance) && this.state.point1 && this.state.point2) {
-            const { point1, point2 } = this.state;
-
-            // Calculate the distance between the two points in pixels
-            const pixelDistance = distanceBetween(point2.x, point2.y, point1.x, point1.y)
+        if (!isNaN(distance) && this.state.calibrationPoint1 && this.state.calibrationPoint2) {
+            const { calibrationPoint1, calibrationPoint2 } = this.state;
 
             // Calculate the scaling factor
-            const mapScale = distance / distanceBetween(point2.x, point2.y, point1.x, point1.y)
-            console.log('mapscale', distance, pixelDistance, this.state.scale, mapScale)
+            const mapScale = distance / distanceBetween(calibrationPoint2.x, calibrationPoint2.y, calibrationPoint1.x, calibrationPoint1.y)
             this.setState({ mapScale: mapScale, calibrationComplete: true });
         }
     };
@@ -180,16 +170,11 @@ class MapViewer extends Component<any, any> {
 
     placePathPoints = (x: number, y: number) => {
         if (!this.state.isDrawingPath) return
-
-        const img = this.mapRef.current!;
-        const rect = img.getBoundingClientRect();
         const canvas = this.canvasRef.current!
+        const coords = this.calculateCoords(x,y)
 
-        // Calculate click coordinates relative to the container
-        x = (x - rect.left) / this.state.scale;
-        y = (y - rect.top) / this.state.scale;
         this.setState((prevState: { path: any; }) => {
-            const newPath = [...prevState.path, { x, y }];
+            const newPath = [...prevState.path, { x: coords.x, y: coords.y }];
             // Draw the new path and recalculate the total distance
             drawLine(newPath, canvas);
             const totalDistance = measurePath(newPath) * this.state.mapScale
@@ -201,7 +186,20 @@ class MapViewer extends Component<any, any> {
         });
     }
 
-    placeCalibrationPoints = (x: number, y: number) => {
+    placeCalibrationPoints = (x: number, y: number) => {    
+        const coords = this.calculateCoords(x,y)
+        if (!this.state.calibrationPoint1) {
+            this.setState({
+                calibrationPoint1: { x: coords.x, y: coords.y },
+            });
+        } else if (!this.state.calibrationPoint2) {
+            this.setState({
+                calibrationPoint2: { x: coords.x, y: coords.y },
+            });
+        }
+    };
+
+    calculateCoords = (x: number, y: number): {x: number, y: number} => {
         const img = this.mapRef.current!;
         const rect = img.getBoundingClientRect();
 
@@ -209,19 +207,11 @@ class MapViewer extends Component<any, any> {
         x = (x - rect.left) / this.state.scale;
         y = (y - rect.top) / this.state.scale;
 
-        if (!this.state.point1) {
-            this.setState({
-                point1: { x: x, y: y },
-            });
-        } else if (!this.state.point2) {
-            this.setState({
-                point2: { x: x, y: y },
-            });
-        }
-    };
+        return {x, y}
+    }
 
     render() {
-        const { point1, point2, scale, distanceInput, calibrationComplete, position, isDragging, isDrawingPath, totalDistance, milesPerDay, imageUrl, width, height } = this.state;
+        const { calibrationPoint1, calibrationPoint2, scale, distanceInput, calibrationComplete, position, isDragging, isDrawingPath, totalDistance, milesPerDay, imageUrl, width, height } = this.state;
 
         return (
             <div
@@ -229,7 +219,7 @@ class MapViewer extends Component<any, any> {
                 style={{
                     cursor: isDragging
                         ? 'grabbing'
-                        : isDrawingPath
+                        : (isDrawingPath || (!calibrationComplete && !(calibrationPoint1 && calibrationPoint2)))
                             ? 'crosshair' // Custom cursor for circle placement
                             : 'auto',
                     width: `${width}px`,
@@ -254,7 +244,7 @@ class MapViewer extends Component<any, any> {
                         Back
                     </button>
 
-                    {(point1 || point2) &&
+                    {(calibrationPoint1 || calibrationPoint2) &&
                         <button
                             className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-red-600"
                             onClick={() => this.resetCalibration()}
@@ -278,11 +268,11 @@ class MapViewer extends Component<any, any> {
 
                 {/* Top Banner */}
                 <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50">
-                    {!calibrationComplete && !(point1 && point2) &&
+                    {!calibrationComplete && !(calibrationPoint1 && calibrationPoint2) &&
                         <h2 className="text-lg">Click on two places on the map to set the scale.</h2>
                     }
 
-                    {point1 && point2 && !calibrationComplete && (
+                    {calibrationPoint1 && calibrationPoint2 && !calibrationComplete && (
                         <div className="flex items-center space-x-4">
                             <h2 className="text-lg">Enter the distance of your selection (in miles):</h2>
                             <input
@@ -304,8 +294,8 @@ class MapViewer extends Component<any, any> {
                     }
                 </div>
 
-                {/* Bottom Left */}
-                <div className="fixed bottom-4 left-4 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50 text-xl">
+                {/* Bottom Left Distance Window */}
+                <div className="fixed bottom-4 left-4 bg-gray-700 bg-opacity-70 text-white text-center py-2 px-6 rounded shadow-lg z-50 text-xl">
                     <div className="flex flex-row mb-2 justify-between gap-3 items-center">
                         <p className="text-gray-300">By Ship:</p>
                         <button
@@ -362,7 +352,7 @@ class MapViewer extends Component<any, any> {
                     <p>Travel Time: {Math.round(totalDistance / milesPerDay * 10) / 10} Days</p>
                 </div>
 
-                {/* Bottom Right */}
+                {/* Bottom Right Buttons */}
                 <div className="fixed bottom-4 right-4 z-50 flex space-x-3">
 
                     {calibrationComplete &&
@@ -434,29 +424,29 @@ class MapViewer extends Component<any, any> {
                         }}
                     />
                     {/* Calibration points: Show circles where the user clicked */}
-                    {point1 && point2 && !calibrationComplete && (
+                    {calibrationPoint1 && calibrationPoint2 && !calibrationComplete && (
                         <svg
                             width="100%"
                             height="100%"
                             style={{ position: 'absolute', top: '0', left: '0', pointerEvents: 'none' }}
                         >
                             <line
-                                x1={point1.x}
-                                y1={point1.y}
-                                x2={point2.x}
-                                y2={point2.y}
+                                x1={calibrationPoint1.x}
+                                y1={calibrationPoint1.y}
+                                x2={calibrationPoint2.x}
+                                y2={calibrationPoint2.y}
                                 stroke="blue"
                                 strokeWidth="1"
                                 strokeDasharray="2,2"  // Dotted line pattern: 2px dash, 2px gap
                             />
                         </svg>
                     )}
-                    {point1 && !calibrationComplete && (
+                    {calibrationPoint1 && !calibrationComplete && (
                         <div
                             style={{
                                 position: 'absolute',
-                                top: point1.y - 2.5,
-                                left: point1.x - 2.5,
+                                top: calibrationPoint1.y - 2.5,
+                                left: calibrationPoint1.x - 2.5,
                                 width: 5,
                                 height: 5,
                                 borderRadius: '50%',
@@ -466,12 +456,12 @@ class MapViewer extends Component<any, any> {
                             }}
                         />
                     )}
-                    {point2 && !calibrationComplete && (
+                    {calibrationPoint2 && !calibrationComplete && (
                         <div
                             style={{
                                 position: 'absolute',
-                                top: point2.y - 2.5,
-                                left: point2.x - 2.5,
+                                top: calibrationPoint2.y - 2.5,
+                                left: calibrationPoint2.x - 2.5,
                                 width: 5,
                                 height: 5,
                                 borderRadius: '50%',

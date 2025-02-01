@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, HashRouter } from 'react-router-dom';
 import './App.css';
 import { ImageViewerWithRouter } from './MapViewer';
 import { getImageFromIndexedDB, saveImageToIndexedDB } from './ImageStorage';
@@ -18,17 +18,18 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const fetchImage = async () => {
-      try {
-        const file = await getImageFromIndexedDB();
-        if (file) {
-          setSelectedImage(file);
-        }
-      } catch (error) {
-        console.error('Error fetching image from IndexedDB:', error);
+  const fetchImage = async () => {
+    try {
+      const file = await getImageFromIndexedDB();
+      if (file) {
+        setSelectedImage(file);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching image from IndexedDB:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchImage();
     const savedState = localStorage.getItem('appState');
     if (savedState) {
@@ -63,8 +64,9 @@ function App() {
             onChange={handleImageUpload}
           />
           {selectedImage && (
-            <div className="mt-4 bg-gray-700 bg-opacity-30 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50 max-w-72 max-h-100 flex flex-col gap-3">
+            <div className="bg-gray-700 bg-opacity-30 text-white text-center py-2 px-2 rounded z-50 max-w-72 max-h-100 flex flex-col gap-3">
               <img
+              className='rounded'
                 src={URL.createObjectURL(selectedImage)}
                 alt="Uploaded map"
               />
@@ -85,7 +87,7 @@ function App() {
             </button>
           }
           {window.innerWidth <= 768 && 
-            <p>Warning: TouchScreen devices not supported.</p>
+            <p>Warning: touch screen devices not supported.</p>
           }
         </div>
       </div>
@@ -103,12 +105,12 @@ export function withRouter(Component: any) {
 
 function Root() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/viewer" element={<ImageViewerWithRouter />} />
+        <Route path="/viewer/" element={<ImageViewerWithRouter />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
