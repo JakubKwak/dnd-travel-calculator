@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, HashRouter } from 'react-router-dom';
 import './App.css';
 import { ImageViewerWithRouter } from './MapViewer';
 import { getImageFromIndexedDB, saveImageToIndexedDB } from './ImageStorage';
@@ -105,12 +105,12 @@ export function withRouter(Component: any) {
 
 function Root() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/viewer/" element={<ImageViewerWithRouter />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
