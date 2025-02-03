@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+.jacquard-12-regular {
+  font-family: "Jacquard 12", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.pixelify-sans {
+  font-family: "Pixelify Sans", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -23,9 +36,4 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
 }

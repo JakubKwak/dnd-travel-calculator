@@ -40,7 +40,7 @@ class MapViewer extends Component<any, any> {
         }
         this.divRef.current.addEventListener('wheel', this.handleWheel, { passive: false });
 
-    
+
         // Load state from localStorage when the component mounts
         const savedState = localStorage.getItem('appState');
         if (savedState) {
@@ -171,7 +171,7 @@ class MapViewer extends Component<any, any> {
     placePathPoints = (x: number, y: number) => {
         if (!this.state.isDrawingPath) return
         const canvas = this.canvasRef.current!
-        const coords = this.calculateCoords(x,y)
+        const coords = this.calculateCoords(x, y)
 
         this.setState((prevState: { path: any; }) => {
             const newPath = [...prevState.path, { x: coords.x, y: coords.y }];
@@ -186,8 +186,8 @@ class MapViewer extends Component<any, any> {
         });
     }
 
-    placeCalibrationPoints = (x: number, y: number) => {    
-        const coords = this.calculateCoords(x,y)
+    placeCalibrationPoints = (x: number, y: number) => {
+        const coords = this.calculateCoords(x, y)
         if (!this.state.calibrationPoint1) {
             this.setState({
                 calibrationPoint1: { x: coords.x, y: coords.y },
@@ -199,7 +199,7 @@ class MapViewer extends Component<any, any> {
         }
     };
 
-    calculateCoords = (x: number, y: number): {x: number, y: number} => {
+    calculateCoords = (x: number, y: number): { x: number, y: number } => {
         const img = this.mapRef.current!;
         const rect = img.getBoundingClientRect();
 
@@ -207,7 +207,7 @@ class MapViewer extends Component<any, any> {
         x = (x - rect.left) / this.state.scale;
         y = (y - rect.top) / this.state.scale;
 
-        return {x, y}
+        return { x, y }
     }
 
     render() {
@@ -233,12 +233,13 @@ class MapViewer extends Component<any, any> {
                 onMouseLeave={this.handleMouseUp}
                 onWheel={this.handleWheel}
                 onClick={this.handleImageClick}
+                className="pixelify-sans"
             >
 
                 {/* Top Left */}
                 <div className="fixed top-4 left-4 z-50 flex space-x-3">
                     <button
-                        className="bg-gray-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                        className="bg-gray-700 text-white px-3 py-2 hover:bg-gray-600 text-xl"
                         onClick={() => this.props.navigate('/')}
                     >
                         Back
@@ -246,7 +247,7 @@ class MapViewer extends Component<any, any> {
 
                     {(calibrationPoint1 || calibrationPoint2) &&
                         <button
-                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-red-600"
+                            className="bg-red-700 text-white px-3 py-2 hover:bg-red-600 text-xl"
                             onClick={() => this.resetCalibration()}
                         >
                             Reset Scale
@@ -257,9 +258,9 @@ class MapViewer extends Component<any, any> {
 
                 {/* Top Right */}
                 <div className="fixed top-4 right-4 z-50 flex space-x-3">
-                    <div className="bg-gray-500 w-10 text-white font-medium px-3 py-2 rounded hover:bg-gray-300 cursor-pointer group">
+                    <div className="bg-gray-500 w-10 text-white text-center px-4 py-2 hover:bg-gray-300 cursor-pointer group">
                         ?
-                        <div className="absolute overflow-hidden top-10 right-0 w-0 h-0 p-0 opacity-0 group-hover:w-80 group-hover:h-40 group-hover:p-4 group-hover:opacity-100 transition-all duration-300 bg-white border rounded-lg shadow-lg">
+                        <div className="absolute overflow-hidden top-10 right-0 w-0 h-0 p-0 opacity-0 group-hover:w-80 group-hover:h-40 group-hover:p-4 group-hover:opacity-100 transition-all duration-300 bg-white border">
                             <p className="text-gray-700 text-lg mb-4">To Zoom: Use Scroll Wheel or the + - buttons in the bottom right.</p>
                             <p className="text-gray-700 text-lg">To Pan: Hold Middle Click or CTRL + Left Click and drag.</p>
                         </div>
@@ -267,23 +268,23 @@ class MapViewer extends Component<any, any> {
                 </div>
 
                 {/* Top Banner */}
-                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-700 bg-opacity-50 text-white text-center py-2 px-6 rounded-lg shadow-lg z-50">
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-600 bg-opacity-70 text-white text-center py-2 px-3 z-50">
                     {!calibrationComplete && !(calibrationPoint1 && calibrationPoint2) &&
-                        <h2 className="text-lg">Click on two places on the map to set the scale.</h2>
+                        <h2 className="text-lg px-2">Click on two places on the map to set the scale.</h2>
                     }
 
                     {calibrationPoint1 && calibrationPoint2 && !calibrationComplete && (
                         <div className="flex items-center space-x-4">
-                            <h2 className="text-lg">Enter the distance of your selection (in miles):</h2>
+                            <h2 className="text-lg px-2">Enter the distance of your selection (in miles):</h2>
                             <input
                                 type="number"
                                 value={distanceInput}
                                 onChange={(e) => this.setState({ distanceInput: e.target.value })}
-                                className="border border-gray-300 rounded-lg px-3 py-2 w-40"
+                                className="border border-gray-300 px-3 py-2 w-24"
                             />
                             <button
                                 onClick={this.calibrate}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                                className="bg-blue-500 text-white px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                             >
                                 Submit
                             </button>
@@ -295,69 +296,79 @@ class MapViewer extends Component<any, any> {
                 </div>
 
                 {/* Bottom Left Distance Window */}
-                <div className="fixed bottom-4 left-4 bg-gray-700 bg-opacity-70 text-white text-center py-2 px-6 rounded shadow-lg z-50 text-xl">
-                    <div className="flex flex-row mb-2 justify-between gap-3 items-center">
-                        <p className="text-gray-300">By Ship:</p>
-                        <button
-                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
-                            onClick={() => this.setState({ milesPerDay: 90 })}
-                        >
-                            Fast
-                        </button>
-                        <button
-                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
-                            onClick={() => this.setState({ milesPerDay: 60 })}
-                        >
-                            Normal
-                        </button>
-                        <button
-                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
-                            onClick={() => this.setState({ milesPerDay: 30 })}
-                        >
-                            Slow
-                        </button>
+                <div className="fixed bottom-4 left-4 bg-gray-700 bg-opacity-80 text-white text-center py-2 px-2 z-50 text-xl">
+                    <div className="flex mb-2 justify-between items-center gap-4">
+                        <p className="text-gray-300 ml-2">By Ship:</p>
+                        <div className="flex justify-between gap-3 items-center">
+                            <button
+                                className="bg-gray-800 text-white text-small hover:bg-gray-700 p-1"
+                                onClick={() => this.setState({ milesPerDay: 90 })}
+                            >
+                                Fast
+                            </button>
+                            <button
+                                className="bg-gray-800 text-white text-small hover:bg-gray-700 p-1"
+                                onClick={() => this.setState({ milesPerDay: 60 })}
+                            >
+                                Normal
+                            </button>
+                            <button
+                                className="bg-gray-800 text-white text-small hover:bg-gray-700 p-1"
+                                onClick={() => this.setState({ milesPerDay: 30 })}
+                            >
+                                Slow
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex flex-row mb-2 justify-between gap-3 items-center">
-                        <p className="text-gray-300">On Foot:</p>
-                        <button
-                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
-                            onClick={() => this.setState({ milesPerDay: 30 })}
-                        >
-                            Fast
-                        </button>
-                        <button
-                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
-                            onClick={() => this.setState({ milesPerDay: 24 })}
-                        >
-                            Normal
-                        </button>
-                        <button
-                            className="bg-gray-700 text-white text-small rounded hover:bg-gray-600 p-1"
-                            onClick={() => this.setState({ milesPerDay: 18 })}
-                        >
-                            Slow
-                        </button>
+                    <div className="flex mb-2 justify-between items-center gap-4">
+                        <p className="text-gray-300 ml-2">On Foot:</p>
+                        <div className="flex justify-between gap-3 items-center">
+                            <button
+                                className="bg-gray-800 text-white text-small hover:bg-gray-700 p-1"
+                                onClick={() => this.setState({ milesPerDay: 30 })}
+                            >
+                                Fast
+                            </button>
+                            <button
+                                className="bg-gray-800 text-white text-small hover:bg-gray-700 p-1"
+                                onClick={() => this.setState({ milesPerDay: 24 })}
+                            >
+                                Normal
+                            </button>
+                            <button
+                                className="bg-gray-800 text-white text-small hover:bg-gray-700 p-1"
+                                onClick={() => this.setState({ milesPerDay: 18 })}
+                            >
+                                Slow
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex flex-row gap-3 mb-8">
+                    <div className="flex flex-row justify-center gap-3 my-4">
                         <p>Miles Per Day:</p>
                         <input
                             type="number"
                             value={milesPerDay}
                             onChange={(e) => this.setState({ milesPerDay: e.target.value })}
-                            className="border border-gray-300 rounded-lg w-20 text-small pl-1"
+                            className="border border-gray-300 w-20 text-small pl-1"
                         />
                     </div>
 
-                    <p>Total Distance: {Math.round(totalDistance)} Miles</p>
-                    <p>Travel Time: {Math.round(totalDistance / milesPerDay * 10) / 10} Days</p>
+                    <div className="flex justify-between gap-3 items-center mx-2">
+                        <p>Total Distance:</p>
+                        <p className="text-3xl">{Math.round(totalDistance)} Miles</p>
+                    </div>
+                    <div className="flex justify-between gap-3 items-center mx-2">
+                        <p>Travel Time:</p>
+                        <p className="text-3xl">{Math.round(totalDistance / milesPerDay * 10) / 10} Days</p>
+                    </div>
                 </div>
 
                 {/* Bottom Right Buttons */}
-                <div className="fixed bottom-4 right-4 z-50 flex space-x-3">
+                <div className="fixed bottom-4 right-4 z-50 flex space-x-3 text-xl">
 
                     {calibrationComplete &&
                         <button
-                            className="bg-green-700 text-white font-medium px-3 py-2 rounded hover:bg-green-600"
+                            className="bg-green-700 text-white font-medium px-3 py-2 hover:bg-green-600"
                             onClick={() => this.toggleDrawingPath()}
                         >
                             {isDrawingPath ? 'Finish Drawing Path' : 'Begin Drawing Path'}
@@ -365,7 +376,7 @@ class MapViewer extends Component<any, any> {
                     }
                     {this.state.path.length > 0 &&
                         <button
-                            className="bg-red-700 text-white font-medium px-3 py-2 rounded hover:bg-red-600"
+                            className="bg-red-700 text-white font-medium px-3 py-2 hover:bg-red-600"
                             onClick={() => this.resetPath()}
                         >
                             Reset Path
@@ -373,7 +384,7 @@ class MapViewer extends Component<any, any> {
                     }
                     {this.state.path.length > 0 &&
                         <button
-                            className="bg-gray-700 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                            className="bg-gray-700 text-white font-medium px-3 py-2 hover:bg-gray-600"
                             onClick={() => this.undoPath()}
                         >
                             Undo
@@ -381,7 +392,7 @@ class MapViewer extends Component<any, any> {
                     }
 
                     <button
-                        className="bg-gray-700 w-10 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                        className="bg-gray-700 w-10 text-white font-medium px-3 py-2 hover:bg-gray-600"
                         onClick={() =>
                             this.setState((prevState: any) => ({
                                 scale: Math.min(prevState.scale * 1.2, 5),
@@ -391,7 +402,7 @@ class MapViewer extends Component<any, any> {
                         +
                     </button>
                     <button
-                        className="bg-gray-700 w-10 text-white font-medium px-3 py-2 rounded hover:bg-gray-600"
+                        className="bg-gray-700 w-10 text-white font-medium px-3 py-2 hover:bg-gray-600"
                         onClick={() =>
                             this.setState((prevState: any) => ({
                                 scale: Math.max(prevState.scale * 0.8, 0.1),
