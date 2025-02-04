@@ -26,7 +26,7 @@ jobs:
         run: npm run build
 
       - name: Deploy static site to S3 bucket
-        run: aws s3 sync dist/ ${{ BUCKET_ID }} --delete
+        run: aws s3 sync dist/ ${{ vars.BUCKET_ID }} --delete
 
       - name: Invalidate cache
-        run: aws cloudfront create-invalidation --distribution-id ${{ DISTRIBUTION_ID }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ vars.DISTRIBUTION_ID }} --paths "/*"
