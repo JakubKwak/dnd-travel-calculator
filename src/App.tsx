@@ -56,7 +56,7 @@ function App() {
           <div className='mx-8'>
             <p className='text-xl'>
               Sorry! Touch screen devices are not supported. Try again on a desktop computer or laptop.
-            </pTEST>
+            </p>
           </div>
         </div>
       }
