@@ -83,6 +83,13 @@ function App() {
                 id="imageInput"
                 onChange={handleImageUpload}
               />
+              <p>Example map image: <a
+                href='https://www.dndbeyond.com/resources/1782-map-of-faerun'
+                className='text-blue-500 hover:text-blue-400'
+              >
+                Faerûn
+              </a>
+              </p>
               {selectedImage && (
                 <div className="bg-gray-700 bg-opacity-30 text-white text-center py-2 px-2 z-50 max-w-72 max-h-100 flex flex-col gap-3">
                   <img
