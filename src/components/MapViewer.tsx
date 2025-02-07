@@ -251,7 +251,7 @@ class MapViewer extends Component<any, any> {
             if (journey === undefined) {
                 return
             }
-            journey.popCoordinatae()
+            journey.popCoordinate()
             const journeys = prevState.journeys
             const canvas = this.canvasRef.current!
             drawJourneys(journeys, canvas)

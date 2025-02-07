@@ -17,14 +17,14 @@ export class Journey {
         this.totalDistance = measurePath(this.path)
     }
 
-    public popCoordinatae(): void {
+    public popCoordinate(): void {
         if (this.path.length > 0) {
             this.path.pop()
             this.totalDistance = measurePath(this.path)
         }
     }
 
-    public resetCoordintes(): void {
+    public resetCoordinates(): void {
         this.path = []
         this.totalDistance = 0
     }
