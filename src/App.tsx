@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation, HashRouter } from 'react-router-dom';
 import './App.css';
-import { ImageViewerWithRouter } from './MapViewer';
+import { ImageViewerWithRouter } from './components/MapViewer';
 import { getImageFromIndexedDB, saveImageToIndexedDB } from './ImageStorage';
 
 
@@ -129,6 +129,7 @@ export function withRouter(Component: any) {
   };
 }
 
+// TODO wtf man
 function Root() {
   return (
     <HashRouter>

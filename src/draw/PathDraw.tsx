@@ -1,5 +1,7 @@
+import { Journey } from "../journey/Journey";
+
 // Draw a line between all points
-export const drawLine = (path: { y: any; x: any; }[], canvas: HTMLCanvasElement) => {
+export const drawJourneys = (joruneys: Journey[], canvas: HTMLCanvasElement) => {
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     const dpr = 4;
@@ -12,25 +14,29 @@ export const drawLine = (path: { y: any; x: any; }[], canvas: HTMLCanvasElement)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.scale(dpr, dpr)
 
-    if (path.length < 2) return; // Only draw lines if there are at least two points
+    joruneys.forEach((Journey: Journey) => {
+        const path = Journey.path
+        if (path.length < 2) return; // Only draw lines if there are at least two points
+    
+        // Set the line style
+        ctx.strokeStyle = Journey.colorScheme.innerColor;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([2, 2]);
+    
+        // Begin drawing the path
+        ctx.beginPath();
+        const firstPoint = path[0];
+        ctx.moveTo(firstPoint.x, firstPoint.y);
+    
+        // Draw lines to each subsequent point
+        path.slice(1).forEach(point => {
+            ctx.lineTo(point.x, point.y);
+        });
+    
+        // Render the path
+        ctx.stroke();
+    })
 
-    // Set the line style
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([2, 2]);
-
-    // Begin drawing the path
-    ctx.beginPath();
-    const firstPoint = path[0];
-    ctx.moveTo(firstPoint.x, firstPoint.y);
-
-    // Draw lines to each subsequent point
-    path.slice(1).forEach(point => {
-        ctx.lineTo(point.x, point.y);
-    });
-
-    // Render the path
-    ctx.stroke();
 };
 
 // Measure the distance between all points in a path
