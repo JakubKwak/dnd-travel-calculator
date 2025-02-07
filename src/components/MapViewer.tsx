@@ -1,6 +1,5 @@
 import React from "react";
 import { Component } from "react";
-import { withRouter } from "../App";
 import { drawJourneys, distanceBetween } from "../draw/PathDraw";
 import { getImageFromIndexedDB } from "../ImageStorage";
 import { Coordinates, Journey } from "../journey/Journey";
@@ -189,7 +188,7 @@ class MapViewer extends Component<any, any> {
             let journey = this.getCurrentJourney()
             if (!journey) {
                 // Add a new journey if it does not exist yet
-                journeys.push(new Journey())
+                journeys.push(JourneyFactory.create(journeys))
                 currentJourney = journeys.length - 1
                 journey = journeys[currentJourney]
             }
@@ -479,4 +478,4 @@ class MapViewer extends Component<any, any> {
     }
 }
 
-export const ImageViewerWithRouter = withRouter(MapViewer);
+export default MapViewer;

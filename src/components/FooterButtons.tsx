@@ -54,7 +54,7 @@ const FooterButtons: React.FC<FooterButtonsProps> = ({
                         className="bg-green-700 text-white font-medium px-3 py-2 hover:bg-green-600"
                         onClick={addJourney}
                     >
-                        Add New Path
+                        Add New Journey
                     </button>
                 }
                 {currentJourney && currentJourney.path.length > 0 &&
@@ -62,7 +62,7 @@ const FooterButtons: React.FC<FooterButtonsProps> = ({
                         className="bg-red-700 text-white font-medium px-3 py-2 hover:bg-red-600"
                         onClick={resetJourney}
                     >
-                        Reset Path
+                        Reset Journey
                     </button>
                 }
                 {currentJourney && currentJourney.path.length > 0 &&
