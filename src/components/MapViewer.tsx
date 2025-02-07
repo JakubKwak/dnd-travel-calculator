@@ -43,9 +43,9 @@ class MapViewer extends Component<any, any> {
         this.state = {
             // Zooming/Panning controls
             scale: 1,
-            position: new Coordinates(0,0),
+            position: new Coordinates(0, 0),
             isDragging: false,
-            dragStart: new Coordinates(0,0),
+            dragStart: new Coordinates(0, 0),
             width: 0,
             height: 0,
 
@@ -283,7 +283,7 @@ class MapViewer extends Component<any, any> {
             let currentJourney = prevState.currentJourney
             journeys = journeys.filter((_journey, key) => key !== journeyKey)
             if (currentJourney >= journeyKey) {
-                 // Shift current index down by 1 if we removed below it
+                // Shift current index down by 1 if we removed below it
                 currentJourney = Math.max(0, currentJourney - 1)
             }
             const canvas = this.canvasRef.current!
@@ -340,7 +340,7 @@ class MapViewer extends Component<any, any> {
 
     resetZoom = () => {
         this.setState({
-            position: new Coordinates(0,0),
+            position: new Coordinates(0, 0),
             scale: 1
         })
     }
@@ -351,7 +351,7 @@ class MapViewer extends Component<any, any> {
 
 
     render() {
-        const { calibrationPoint1, calibrationPoint2, scale, distanceInput, calibrationComplete, position, isDragging, journeys, imageUrl, width, height, mapScale } = this.state;
+        const { calibrationPoint1, calibrationPoint2, scale, distanceInput, calibrationComplete, position, isDragging, journeys, imageUrl, width, height, mapScale, currentJourney } = this.state;
 
         return (
             <div
@@ -401,7 +401,7 @@ class MapViewer extends Component<any, any> {
                         journeys.map((journey: Journey, key: number) => (
                             <JourneyMenu
                                 title={"Journey " + (key + 1)}
-                                isOpen={this.state.currentJourney == key}
+                                isOpen={currentJourney == key}
                                 journey={journey}
                                 mapScale={mapScale}
                                 key={key}
@@ -468,8 +468,11 @@ class MapViewer extends Component<any, any> {
                     />
                     {/* Path */}
                     {
-                        this.state.journeys.map((journey: Journey, index: React.Key) => (
-                            <Path journey={journey} key={index} />
+                        journeys.map((journey: Journey, index: React.Key) => (
+                            <Path
+                                journey={journey} key={index}
+                                isSelected = {index == currentJourney}
+                            />
                         ))
                     }
                 </div>
