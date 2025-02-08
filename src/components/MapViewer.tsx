@@ -396,7 +396,7 @@ class MapViewer extends Component<any, any> {
                 />
 
                 {/* Top Left Journey Windows */}
-                <div className="fixed top-0 left-0 z-50 p-4 h-[calc(100%-70px)] overflow-y-auto no-scrollbar">
+                <div className="fixed top-0 left-0 z-50 p-4 max-h-[calc(100%-70px)] overflow-y-auto no-scrollbar">
                     {
                         journeys.map((journey: Journey, key: number) => (
                             <JourneyMenu
