@@ -9,10 +9,11 @@ interface JourneyMenuProps {
     title: string
     onClick: () => void
     onDelete: () => void
+    onReset: () => void
     setMilesPerDay: (miles: number) => void // Needs to go through a setter for proper reactivity 
 }
 
-const JourneyMenu: React.FC<JourneyMenuProps> = ({ journey, mapScale, isOpen, title, onClick: onClick, onDelete, setMilesPerDay }) => {
+const JourneyMenu: React.FC<JourneyMenuProps> = ({ journey, mapScale, isOpen, title, onClick: onClick, onDelete, onReset, setMilesPerDay }) => {
     const handleClick = (event: React.MouseEvent) => {
         const target = event.target as HTMLElement;
         if (target.tagName.toLowerCase() === "button") {
@@ -30,7 +31,7 @@ const JourneyMenu: React.FC<JourneyMenuProps> = ({ journey, mapScale, isOpen, ti
         >
             <div className='flex justify-between'>
                 <h1 className='text-2xl pb-2'>
-                    <span style={{color: journey.colorScheme.innerColor}}>o </span>
+                    <span style={{ color: journey.colorScheme.innerColor }}>o </span>
                     {title}
                 </h1>
                 <button className='bg-red-500 w-8 h-8 hover:bg-red-400' onClick={onDelete}>
@@ -106,6 +107,17 @@ const JourneyMenu: React.FC<JourneyMenuProps> = ({ journey, mapScale, isOpen, ti
                 <p>Travel Time:</p>
                 <p className="text-2xl">{calculateTotalTime(journey, mapScale)} Days</p>
             </div>
+
+            {
+                isOpen &&
+                <button
+                    className="bg-red-700 text-white font-medium px-3 py-2 hover:bg-red-600 disabled:bg-gray-800 text-sm w-full"
+                    disabled={journey.path.length === 0}
+                    onClick={onReset}
+                >
+                    Reset Journey
+                </button>
+            }
         </div>
     )
 };
