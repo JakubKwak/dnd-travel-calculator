@@ -3,13 +3,10 @@ import { Coordinates, Journey } from '../journey/Journey';
 import { useNavigate } from 'react-router-dom';
 
 interface FooterButtonsProps {
-    calibrationPoint1: Coordinates
-    calibrationPoint2: Coordinates
-    calibrationComplete: Boolean
+    calibrationPoint1: Coordinates | null
+    calibrationPoint2: Coordinates | null
     currentJourney: Journey | undefined,
     resetCalibration: () => void
-    addJourney: () => void
-    resetJourney: () => void
     undoJourney: () => void
     zoomIn: () => void
     zoomOut: () => void
@@ -19,11 +16,8 @@ interface FooterButtonsProps {
 const FooterButtons: React.FC<FooterButtonsProps> = ({
     calibrationPoint1,
     calibrationPoint2,
-    calibrationComplete,
     currentJourney,
     resetCalibration,
-    addJourney,
-    resetJourney,
     undoJourney,
     zoomIn,
     zoomOut,
@@ -47,22 +41,6 @@ const FooterButtons: React.FC<FooterButtonsProps> = ({
                         onClick={resetCalibration}
                     >
                         Reset Scale
-                    </button>
-                }
-                {calibrationComplete &&
-                    <button
-                        className="bg-green-700 text-white font-medium px-3 py-2 hover:bg-green-600"
-                        onClick={addJourney}
-                    >
-                        Add New Journey
-                    </button>
-                }
-                {currentJourney && currentJourney.path.length > 0 &&
-                    <button
-                        className="bg-red-700 text-white font-medium px-3 py-2 hover:bg-red-600"
-                        onClick={resetJourney}
-                    >
-                        Reset Journey
                     </button>
                 }
                 {currentJourney && currentJourney.path.length > 0 &&

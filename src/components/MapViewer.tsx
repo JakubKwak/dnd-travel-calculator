@@ -20,6 +20,7 @@ interface MapViewerState {
     position: Coordinates;
     isDragging: boolean;
     dragStart: Coordinates;
+    isHoveringOverMenu: boolean;
     width: number;
     height: number;
     // Calibration
@@ -33,7 +34,7 @@ interface MapViewerState {
     currentJourney: number;
 }
 
-class MapViewer extends Component<any, any> {
+class MapViewer extends Component<any, MapViewerState> {
     divRef: React.RefObject<HTMLDivElement>;
     mapRef: React.RefObject<HTMLDivElement>;
     canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -48,6 +49,8 @@ class MapViewer extends Component<any, any> {
             dragStart: new Coordinates(0, 0),
             width: 0,
             height: 0,
+            isHoveringOverMenu: false,
+            imageUrl: "",
 
             // Calibration
             distanceInput: "100",
@@ -58,7 +61,7 @@ class MapViewer extends Component<any, any> {
 
             // Journey Calculation
             journeys: [],
-            currentPath: 0,
+            currentJourney: 0,
         };
         this.divRef = React.createRef();
         this.mapRef = React.createRef();
@@ -160,10 +163,19 @@ class MapViewer extends Component<any, any> {
 
     handleWheel = (e: { stopPropagation: () => void; deltaY: number; }) => {
         e.stopPropagation();
+        if (this.state.isHoveringOverMenu) {
+            return
+        }
         const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        this.setState((prevState: any) => ({
-            scale: Math.min(Math.max(0.1, prevState.scale * scaleFactor), 5),
-        }));
+        this.setState((prevState: any) => {
+            const newScale = Math.min(Math.max(0.1, prevState.scale * scaleFactor), 5)
+            const actualScaleFactor = newScale/prevState.scale // Actualy scale factory taking into account the clamping
+            return {
+                ...prevState,
+                scale: newScale,
+                position: prevState.scale != newScale ? new Coordinates(this.state.position.x * actualScaleFactor, this.state.position.y * actualScaleFactor) : prevState.position
+            }
+        });
     };
 
     //
@@ -228,9 +240,13 @@ class MapViewer extends Component<any, any> {
     // Button Handlers
     //
 
-    resetJourney = () => {
+    resetJourney = (journeyIndex: number) => {
+        if (journeyIndex >= this.state.journeys.length) {
+            return
+        }
         this.setState((prevState: MapViewerState) => {
-            const journey = this.getCurrentJourney()
+            const journeys = prevState.journeys
+            const journey = journeys[journeyIndex]
             if (journey === undefined) {
                 return
             }
@@ -238,10 +254,9 @@ class MapViewer extends Component<any, any> {
             journey.totalDistance = 0
 
             const canvas = this.canvasRef.current!
-            const journeys = prevState.journeys
             drawJourneys(journeys, canvas)
 
-            return { journeys: journeys };
+            return { ...prevState, journeys: journeys };
         });
     };
 
@@ -256,7 +271,7 @@ class MapViewer extends Component<any, any> {
             const canvas = this.canvasRef.current!
             drawJourneys(journeys, canvas)
 
-            return { journeys: journeys };
+            return { ...prevState, journeys: journeys };
         });
     };
 
@@ -272,8 +287,7 @@ class MapViewer extends Component<any, any> {
         this.setState((prevState: MapViewerState) => {
             const journeys = prevState.journeys
             journeys.push(JourneyFactory.create(journeys))
-            console.log(this.state.journeys)
-            return { journeys: journeys, currentJourney: journeys.length - 1 };
+            return { ...prevState, journeys: journeys, currentJourney: journeys.length - 1 };
         });
     }
 
@@ -288,7 +302,7 @@ class MapViewer extends Component<any, any> {
             }
             const canvas = this.canvasRef.current!
             drawJourneys(journeys, canvas)
-            return { journeys: journeys, currentJourney: currentJourney };
+            return { ...prevState, journeys: journeys, currentJourney: currentJourney };
         });
     }
 
@@ -322,7 +336,7 @@ class MapViewer extends Component<any, any> {
             }
             journey.milesPerDay = milesPerDay
 
-            return { journeys: journeys }// todo fix/clean up
+            return { ...prevState, journeys: journeys }// todo fix/clean up
         });
     }
 
@@ -396,7 +410,11 @@ class MapViewer extends Component<any, any> {
                 />
 
                 {/* Top Left Journey Windows */}
-                <div className="fixed top-0 left-0 z-50 p-4 max-h-[calc(100%-70px)] overflow-y-auto no-scrollbar">
+                <div
+                    className="fixed top-0 left-0 z-50 p-4 max-h-[calc(100%-70px)] overflow-y-auto no-scrollbar"
+                    onMouseEnter={() => { this.setState({ isHoveringOverMenu: true }) }}
+                    onMouseLeave={() => { this.setState({ isHoveringOverMenu: false }) }}
+                >
                     {
                         journeys.map((journey: Journey, key: number) => (
                             <JourneyMenu
@@ -407,20 +425,26 @@ class MapViewer extends Component<any, any> {
                                 key={key}
                                 onClick={() => this.selectJourney(key)}
                                 onDelete={() => this.removeJourney(key)}
+                                onReset={() => this.resetJourney(key)}
                                 setMilesPerDay={this.setMilesPerDay}
                             />
                         ))
+                    }
+                    {calibrationComplete &&
+                        <button
+                            className="bg-green-700 text-white font-medium px-3 py-2 hover:bg-green-600 w-full"
+                            onClick={this.addJourney}
+                        >
+                            + Add New Journey
+                        </button>
                     }
                 </div>
 
                 <FooterButtons
                     calibrationPoint1={calibrationPoint1}
                     calibrationPoint2={calibrationPoint2}
-                    calibrationComplete={calibrationComplete}
                     currentJourney={this.getCurrentJourney()}
                     resetCalibration={this.resetCalibration}
-                    addJourney={this.addJourney}
-                    resetJourney={this.resetJourney}
                     undoJourney={this.undoJourney}
                     zoomIn={this.zoomIn}
                     zoomOut={this.zoomOut}
@@ -439,7 +463,7 @@ class MapViewer extends Component<any, any> {
                 >
                     {/* Image */}
                     <img
-                        src={imageUrl}
+                        src={imageUrl ?? ""}
                         alt="Zoomable map"
                         className="z-10"
                         style={{
@@ -471,7 +495,7 @@ class MapViewer extends Component<any, any> {
                         journeys.map((journey: Journey, index: React.Key) => (
                             <Path
                                 journey={journey} key={index}
-                                isSelected = {index == currentJourney}
+                                isSelected={index == currentJourney}
                             />
                         ))
                     }
