@@ -2,8 +2,8 @@ import React from 'react';
 import { Coordinates } from '../journey/Journey';
 
 interface TopBannerProps {
-    calibrationPoint1: Coordinates
-    calibrationPoint2: Coordinates
+    calibrationPoint1: Coordinates | null
+    calibrationPoint2: Coordinates | null
     calibrationComplete: Boolean
     distanceInput: string
     setDistanceInput: (input: string) => void
