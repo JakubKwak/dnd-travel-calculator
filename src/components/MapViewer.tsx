@@ -411,7 +411,7 @@ class MapViewer extends Component<any, MapViewerState> {
 
                 {/* Top Left Journey Windows */}
                 <div
-                    className="fixed top-0 left-0 z-50 p-4 max-h-[calc(100%-70px)] overflow-y-auto no-scrollbar"
+                    className="fixed top-0 left-0 z-50 p-4 max-h-[calc(100%-70px)] overflow-y-auto no-scrollbar min-w-96"
                     onMouseEnter={() => { this.setState({ isHoveringOverMenu: true }) }}
                     onMouseLeave={() => { this.setState({ isHoveringOverMenu: false }) }}
                 >
