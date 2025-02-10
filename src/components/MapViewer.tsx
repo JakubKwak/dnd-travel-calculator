@@ -9,6 +9,7 @@ import JourneyMenu from "./JourneyMenu";
 import FooterButtons from "./FooterButtons";
 import TopBanner from "./TopBanner";
 import { JourneyFactory } from "../journey/JourneyFactory";
+import { calculateTotalDistance, calculateTotalTime } from "../calculation/CalculateJourneys";
 
 // TODO
 // Needs a lot of refactoring and splitting up
@@ -169,7 +170,7 @@ class MapViewer extends Component<any, MapViewerState> {
         const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
         this.setState((prevState: any) => {
             const newScale = Math.min(Math.max(0.1, prevState.scale * scaleFactor), 5)
-            const actualScaleFactor = newScale/prevState.scale // Actualy scale factory taking into account the clamping
+            const actualScaleFactor = newScale / prevState.scale // Actualy scale factory taking into account the clamping
             return {
                 ...prevState,
                 scale: newScale,
@@ -363,7 +364,6 @@ class MapViewer extends Component<any, MapViewerState> {
         this.setState({ distanceInput: value })
     }
 
-
     render() {
         const { calibrationPoint1, calibrationPoint2, scale, distanceInput, calibrationComplete, position, isDragging, journeys, imageUrl, width, height, mapScale, currentJourney } = this.state;
 
@@ -415,6 +415,21 @@ class MapViewer extends Component<any, MapViewerState> {
                     onMouseEnter={() => { this.setState({ isHoveringOverMenu: true }) }}
                     onMouseLeave={() => { this.setState({ isHoveringOverMenu: false }) }}
                 >
+                    {
+                        journeys.length > 1 &&
+                        <div
+                            className='bg-gray-800 bg-opacity-80 text-white text-center py-2 px-2 z-50 text-xl cursor-default mb-2'
+                        >
+                            <div className="flex justify-between gap-3 items-center mx-2">
+                                <p>Total Distance:</p>
+                                <p className="text-2xl">{calculateTotalDistance(journeys, mapScale)} Miles</p>
+                            </div>
+                            <div className="flex justify-between gap-3 items-center mx-2">
+                                <p>Total Travel Time:</p>
+                                <p className="text-2xl">{calculateTotalTime(journeys, mapScale)} Days</p>
+                            </div>
+                        </div>
+                    }
                     {
                         journeys.map((journey: Journey, key: number) => (
                             <JourneyMenu
