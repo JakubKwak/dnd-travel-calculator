@@ -1,6 +1,6 @@
 import React from 'react';
 import { Journey } from '../journey/Journey';
-import { calculateDistance, calculateTotalTime } from '../calculation/CalculateJourneys';
+import { calculateJourneyDistance, calculateJourneyTime } from '../calculation/CalculateJourneys';
 
 interface JourneyMenuProps {
     journey: Journey
@@ -100,12 +100,12 @@ const JourneyMenu: React.FC<JourneyMenuProps> = ({ journey, mapScale, isOpen, ti
             }
 
             <div className="flex justify-between gap-3 items-center mx-2">
-                <p>Total Distance:</p>
-                <p className="text-2xl">{calculateDistance(journey, mapScale)} Miles</p>
+                <p>Distance:</p>
+                <p className="text-2xl">{calculateJourneyDistance(journey, mapScale)} Miles</p>
             </div>
             <div className="flex justify-between gap-3 items-center mx-2">
                 <p>Travel Time:</p>
-                <p className="text-2xl">{calculateTotalTime(journey, mapScale)} Days</p>
+                <p className="text-2xl">{calculateJourneyTime(journey, mapScale)} Days</p>
             </div>
 
             {
