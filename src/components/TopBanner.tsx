@@ -42,7 +42,7 @@ const TopBanner: React.FC<TopBannerProps> = ({
                 </div>
             )}
             {calibrationComplete &&
-                <h2 className="text-lg">Draw a path on the map to calcualte the distance and travel time.</h2>
+                <h2 className="text-lg">Draw a path on the map to calculate the distance and travel time.</h2>
             }
         </div>
     )
