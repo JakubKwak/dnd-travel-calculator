@@ -93,7 +93,7 @@ const JourneyMenu: React.FC<JourneyMenuProps> = ({ journey, mapScale, isOpen, ti
                             type="number"
                             value={journey.milesPerDay}
                             onChange={(e) => setMilesPerDay(Number(e.target.value) ?? 1)}
-                            className="border border-gray-300 w-20 text-small pl-1"
+                            className="border border-gray-300 w-20 text-small pl-1 bg-black"
                         />
                     </div>
                 </>
