@@ -133,8 +133,8 @@ class MapViewer extends Component<any, MapViewerState> {
     // Image Zoom/Drag Controls
     //
     handleMouseDown = (e: React.MouseEvent) => {
-        // Middle click or CTRL + Left Click
-        if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
+        // Middle click or (CTRL/CMD) + Left Click
+        if (e.button === 1 || (e.button === 0 && (e.ctrlKey || e.metaKey))) {
             e.preventDefault()
             this.setState({
                 isDragging: true,
@@ -185,7 +185,7 @@ class MapViewer extends Component<any, MapViewerState> {
 
     handleImageClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (target.tagName !== 'IMG' || e.ctrlKey) return
+        if (target.tagName !== 'IMG' || e.ctrlKey || e.metaKey) return
 
         this.placeCalibrationPoints(e.clientX, e.clientY)
         this.placeCoordinate(e.clientX, e.clientY)
@@ -343,13 +343,13 @@ class MapViewer extends Component<any, MapViewerState> {
 
     zoomIn = () => {
         this.setState((prevState: any) => ({
-            scale: Math.min(prevState.scale * 1.2, 5),
+            scale: Math.min(prevState.scale * 1.2, 15),
         }))
     }
 
     zoomOut = () => {
         this.setState((prevState: any) => ({
-            scale: Math.max(prevState.scale * 0.8, 0.1),
+            scale: Math.max(prevState.scale * 0.8, 0.5),
         }))
     }
 
